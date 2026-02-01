@@ -8,7 +8,19 @@ const getEnv = (key: keyof Window['__ENV__']) => {
   return import.meta.env[key];
 };
 
-const supabaseUrl = getEnv('VITE_SUPABASE_URL') || 'http://localhost:8000';
+// Check if we should use the internal proxy
+// This flag comes from the server injection as well
+const useProxy = (typeof window !== 'undefined' && window.__ENV__ && (window.__ENV__ as any).USE_PROXY === 'true');
+
+let supabaseUrl = getEnv('VITE_SUPABASE_URL') || 'http://localhost:8000';
+
+// If proxy is enabled, point Supabase Client to our own backend route
+if (useProxy) {
+  // Use current origin + /api/supabase
+  supabaseUrl = `${window.location.origin}/api/supabase`;
+  console.log('Using Internal Proxy for Supabase:', supabaseUrl);
+}
+
 const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY') || 'placeholder';
 
 // Debugging: Log Supabase configuration

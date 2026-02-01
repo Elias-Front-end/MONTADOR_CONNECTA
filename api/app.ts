@@ -12,6 +12,7 @@ import path from 'path'
 import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 import authRoutes from './routes/auth.js'
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 import fs from 'fs'
 
@@ -25,6 +26,40 @@ dotenv.config()
 const app: express.Application = express()
 
 app.use(cors())
+
+// Proxy for Internal Supabase Access
+// This allows the frontend to talk to Supabase via this server (acting as a bridge)
+// Useful when Supabase is only accessible internally in the Docker network
+const internalSupabaseUrl = process.env.INTERNAL_SUPABASE_URL;
+
+if (internalSupabaseUrl) {
+  console.log(`Setting up Supabase Proxy to: ${internalSupabaseUrl}`);
+  app.use(
+    '/api/supabase',
+    createProxyMiddleware({
+      target: internalSupabaseUrl,
+      changeOrigin: true,
+      pathRewrite: {
+        '^/api/supabase': '', // Remove /api/supabase prefix when forwarding
+      },
+      on: {
+        proxyReq: (proxyReq, req, res) => {
+           // Optional: Log proxy requests for debugging
+           // console.log(`Proxying ${req.method} request to: ${internalSupabaseUrl}${req.url}`);
+        },
+        error: (err, req, res) => {
+          console.error('Proxy Error:', err);
+          if ((res as any).status) {
+            (res as any).status(500).json({ error: 'Proxy Error', details: err.message });
+          } else {
+             res.end('Proxy Error');
+          }
+        }
+      }
+    })
+  );
+}
+
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
@@ -62,7 +97,8 @@ const serveIndexHtml = (res: Response) => {
     // Replace the placeholder with actual env vars
     const envConfig = {
       VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || 'http://localhost:8000',
-      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || 'placeholder'
+      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || 'placeholder',
+      USE_PROXY: process.env.INTERNAL_SUPABASE_URL ? 'true' : 'false' // Tell frontend to use proxy if internal URL is set
     };
 
     const result = data.replace(

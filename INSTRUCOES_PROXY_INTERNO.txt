@@ -1,0 +1,32 @@
+# INSTRUÇÕES PARA CONEXÃO INTERNA (PROXY)
+
+Você pediu para acessar o Supabase INTERNAMENTE (via rede Docker), sem expô-lo publicamente.
+Para isso, configuramos um "Proxy Reverso" no seu App.
+
+## 1. Configuração no EasyPanel (Aba Environment)
+
+Copie e cole EXATAMENTE o bloco abaixo. Note a nova variável `INTERNAL_SUPABASE_URL`.
+
+```env
+PORT=3000
+
+# 1. URL INTERNA (Docker): Onde o servidor Node vai buscar os dados
+# Use o nome do serviço do Supabase (Kong) e a porta interna (8000)
+# Exemplo: http://elias-dev_supabase_montador_connecta:8000
+INTERNAL_SUPABASE_URL=http://<NOME_DO_SERVICO_SUPABASE_NO_DOCKER>:8000
+
+# 2. URL PÚBLICA (Frontend): 
+# Como estamos usando proxy, esta variável pode ser ignorada pelo código,
+# MAS mantenha uma URL válida por segurança ou para fallback.
+VITE_SUPABASE_URL=http://localhost:3000
+
+# 3. Sua Chave Anônima (Obrigatória)
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE
+```
+
+## Resumo do Funcionamento:
+1. O usuário acessa seu site (`https://seu-app.com`).
+2. O site tenta falar com o Supabase em `https://seu-app.com/api/supabase/...`.
+3. Seu servidor Node recebe essa chamada e repassa internamente para `http://elias-dev...:8000/...`.
+4. O Supabase responde para o Node, que responde para o usuário.
+5. **Resultado**: O navegador nunca precisa saber o endereço interno do Supabase.
