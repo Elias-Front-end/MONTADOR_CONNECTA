@@ -6,9 +6,10 @@ import app from './app.js';
 /**
  * start server with port
  */
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT) || 3001;
 
-const server = app.listen(PORT, () => {
+// Listen on 0.0.0.0 to allow external access (Docker/EasyPanel)
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server ready on port ${PORT}`);
 });
 
