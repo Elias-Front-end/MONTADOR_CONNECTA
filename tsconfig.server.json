@@ -5,6 +5,7 @@
     "moduleResolution": "NodeNext",
     "noEmit": false,
     "outDir": "dist-server",
+    "rootDir": ".",
     "allowImportingTsExtensions": false,
     "types": ["node", "express"]
   },
