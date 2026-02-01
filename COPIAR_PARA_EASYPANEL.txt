@@ -1,0 +1,16 @@
+# PARE! As configurações que você mostrou (MySQL) estão ERRADAS para este projeto.
+# O Montador Conecta usa SUPABASE (PostgreSQL), não MySQL.
+
+# 1. APAGUE todas as linhas que começam com DB_ (DB_CONNECTION, DB_HOST, etc). Elas não servem para nada aqui.
+
+# 2. COPIE E COLE o bloco abaixo na aba Environment do seu App no EasyPanel:
+# (Substitua a URL pelo link real do seu Supabase)
+
+PORT=3000
+
+# IMPORTANTE: Coloque aqui o link do seu Supabase (Kong) com HTTPS
+# Exemplo: https://supabase.montadorconecta.com.br
+VITE_SUPABASE_URL=https://<SEU_DOMINIO_SUPABASE_AQUI>
+
+# Esta é a chave que você me mandou anteriormente:
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE

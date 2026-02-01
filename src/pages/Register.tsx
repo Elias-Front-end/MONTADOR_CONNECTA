@@ -75,7 +75,13 @@ export default function Register() {
         navigate('/login');
       }
     } catch (err: any) {
-      setError(err.message || 'Erro ao realizar cadastro');
+      console.error('Registration Error:', err);
+      const isNetworkError = err.message === 'Failed to fetch';
+      const errorMessage = isNetworkError 
+        ? `Erro de conexão com o servidor. Verifique se a URL do Supabase está correta. (Tentando acessar: ${import.meta.env.VITE_SUPABASE_URL || 'localhost'})` 
+        : (err.message || 'Erro ao realizar cadastro');
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
