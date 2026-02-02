@@ -83,40 +83,7 @@ app.use(
 
 // Serve static files from the frontend build directory
 const clientBuildPath = path.join(__dirname, '../../dist')
-
-// Function to serve index.html with runtime env injection
-const serveIndexHtml = (res: Response) => {
-  const indexPath = path.join(clientBuildPath, 'index.html');
-  
-  fs.readFile(indexPath, 'utf8', (err, data) => {
-    if (err) {
-      console.error('Error reading index.html', err);
-      return res.status(500).send('Error loading application');
-    }
-
-    // Replace the placeholder with actual env vars
-    const envConfig = {
-      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || 'http://localhost:8000',
-      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || 'placeholder',
-      USE_PROXY: process.env.INTERNAL_SUPABASE_URL ? 'true' : 'false' // Tell frontend to use proxy if internal URL is set
-    };
-
-    const result = data.replace(
-      'window.__ENV__ = {',
-      `window.__ENV__ = ${JSON.stringify(envConfig)}; //`
-    );
-
-    res.send(result);
-  });
-};
-
-// Serve static files BUT skip index.html so we can handle it manually
-app.use(express.static(clientBuildPath, { index: false }))
-
-// Handle root path specifically
-app.get('/', (req: Request, res: Response) => {
-  serveIndexHtml(res);
-});
+app.use(express.static(clientBuildPath))
 
 // Handle SPA routing: serve index.html for all non-API routes
 app.get('*', (req: Request, res: Response) => {
@@ -127,7 +94,7 @@ app.get('*', (req: Request, res: Response) => {
       error: 'API not found',
     })
   } else {
-    serveIndexHtml(res);
+    res.sendFile(path.join(clientBuildPath, 'index.html'))
   }
 })
 

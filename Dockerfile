@@ -37,7 +37,11 @@ COPY --from=builder /app/dist ./dist
 # Copy backend build
 COPY --from=builder /app/dist-server ./dist-server
 
+# Copy start script
+COPY start.sh ./
+RUN chmod +x start.sh
+
 ENV PORT=3000
 EXPOSE 3000
 
-CMD ["node", "dist-server/api/server.js"]
+CMD ["./start.sh"]
