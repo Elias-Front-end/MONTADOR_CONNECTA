@@ -10,16 +10,27 @@ import { motion } from 'framer-motion';
 // Schema Validation
 const profileSchema = z.object({
   full_name: z.string().min(3, "Nome é obrigatório"),
-  email: z.string().email("Email inválido").readonly(), // Email usually shouldn't be changed here easily
-  video_presentation: z.string().url("URL inválida").optional().or(z.literal('')),
-  facebook_url: z.string().url("URL inválida").optional().or(z.literal('')),
-  youtube_url: z.string().url("URL inválida").optional().or(z.literal('')),
-  twitter_url: z.string().url("URL inválida").optional().or(z.literal('')),
-  instagram_url: z.string().url("URL inválida").optional().or(z.literal('')),
-  experience_years: z.string().optional(),
+  email: z.string().email("Email inválido").readonly(), 
+  
+  // Shared
   whatsapp: z.string().min(10, "WhatsApp inválido").optional().or(z.literal('')),
   phone_secondary: z.string().optional(),
+  facebook_url: z.string().url("URL inválida").optional().or(z.literal('')),
+  instagram_url: z.string().url("URL inválida").optional().or(z.literal('')),
+  
+  // Montador Only
+  video_presentation: z.string().url("URL inválida").optional().or(z.literal('')),
+  youtube_url: z.string().url("URL inválida").optional().or(z.literal('')),
+  twitter_url: z.string().url("URL inválida").optional().or(z.literal('')),
+  experience_years: z.string().optional(),
   skills: z.array(z.string()).optional(),
+
+  // Partner Only (Corporate)
+  cnpj: z.string().optional(),
+  commercial_address: z.string().optional(),
+  description: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
 });
 
 const AVAILABLE_SKILLS = [
@@ -86,6 +97,13 @@ export default function Profile() {
         setValue('whatsapp', data.whatsapp || '');
         setValue('phone_secondary', data.phone_secondary || '');
         
+        // Corporate Fields
+        setValue('cnpj', data.cnpj || '');
+        setValue('commercial_address', data.commercial_address || '');
+        setValue('description', data.description || '');
+        setValue('city', data.city || '');
+        setValue('state', data.state || '');
+        
         if (data.skills && Array.isArray(data.skills)) {
           setSelectedSkills(data.skills);
           setValue('skills', data.skills);
@@ -123,6 +141,14 @@ export default function Profile() {
           whatsapp: data.whatsapp,
           phone_secondary: data.phone_secondary,
           skills: selectedSkills,
+          
+          // Corporate
+          cnpj: data.cnpj,
+          commercial_address: data.commercial_address,
+          description: data.description,
+          city: data.city,
+          state: data.state,
+          
           updated_at: new Date().toISOString()
         })
         .select(); // Select garante que retorna o erro se falhar na política de INSERT
@@ -247,18 +273,36 @@ export default function Profile() {
             {/* Fields Column */}
             <div className="flex-grow space-y-5">
               
-              <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vídeo de apresentação</label>
-                <input 
-                  {...register('video_presentation')}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[#FACC15] focus:border-transparent outline-none transition-all"
-                  placeholder="Ex: https://www.youtube.com/watch?v=..."
-                />
-              </div>
+              {/* === MONTADOR ONLY FIELDS === */}
+              {user?.role === 'montador' && (
+                <div className="w-full">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Vídeo de apresentação</label>
+                  <input 
+                    {...register('video_presentation')}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[#FACC15] focus:border-transparent outline-none transition-all"
+                    placeholder="Ex: https://www.youtube.com/watch?v=..."
+                  />
+                </div>
+              )}
+
+              {/* === PARTNER (COMPANY) ONLY FIELDS === */}
+              {user?.role !== 'montador' && (
+                <div className="w-full">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Descrição da Empresa</label>
+                  <textarea 
+                    {...register('description')}
+                    rows={3}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[#FACC15] focus:border-transparent outline-none transition-all"
+                    placeholder="Conte um pouco sobre sua marcenaria ou loja..."
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {user?.role === 'montador' ? 'Nome Completo' : 'Nome Fantasia / Razão Social'}
+                  </label>
                   <input 
                     {...register('full_name')}
                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[#FACC15] focus:border-transparent outline-none transition-all"
@@ -275,13 +319,58 @@ export default function Profile() {
                 </div>
               </div>
 
+              {/* === PARTNER SPECIFIC: CNPJ & ADDRESS === */}
+              {user?.role !== 'montador' && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
+                      <input 
+                        {...register('cnpj')}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[#FACC15] focus:border-transparent outline-none"
+                        placeholder="00.000.000/0000-00"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Endereço Comercial</label>
+                      <input 
+                        {...register('commercial_address')}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[#FACC15] focus:border-transparent outline-none"
+                        placeholder="Rua, Número, Bairro"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+                      <input 
+                        {...register('city')}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[#FACC15] focus:border-transparent outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Estado (UF)</label>
+                      <input 
+                        {...register('state')}
+                        maxLength={2}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[#FACC15] focus:border-transparent outline-none uppercase"
+                        placeholder="SP"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               {/* Social Row */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
                   { label: 'Facebook', name: 'facebook_url' },
-                  { label: 'YouTube', name: 'youtube_url' },
-                  { label: 'Twitter', name: 'twitter_url' },
                   { label: 'Instagram', name: 'instagram_url' },
+                  // Montador gets YouTube/Twitter, Partner gets only basic or maybe Website later
+                  ...(user?.role === 'montador' ? [
+                    { label: 'YouTube', name: 'youtube_url' },
+                    { label: 'Twitter', name: 'twitter_url' }
+                  ] : [])
                 ].map((social) => (
                   <div key={social.name}>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{social.label}</label>
@@ -294,36 +383,39 @@ export default function Profile() {
                 ))}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tempo de experiência</label>
-                <input 
-                  {...register('experience_years')}
-                  className="w-full md:w-1/2 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[#FACC15] focus:border-transparent outline-none"
-                  placeholder="Ex: 5 anos"
-                />
-              </div>
-
-              {/* Skills Section */}
+              {/* === MONTADOR ONLY: EXPERIENCE & SKILLS === */}
               {user?.role === 'montador' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Suas Especialidades</label>
-                  <div className="flex flex-wrap gap-2">
-                    {AVAILABLE_SKILLS.map((skill) => (
-                      <button
-                        key={skill}
-                        type="button"
-                        onClick={() => toggleSkill(skill)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                          selectedSkills.includes(skill)
-                            ? 'bg-blue-100 text-blue-700 border-blue-200'
-                            : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
-                        }`}
-                      >
-                        {skill}
-                      </button>
-                    ))}
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tempo de experiência</label>
+                    <input 
+                      {...register('experience_years')}
+                      className="w-full md:w-1/2 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[#FACC15] focus:border-transparent outline-none"
+                      placeholder="Ex: 5 anos"
+                    />
                   </div>
-                </div>
+
+                  {/* Skills Section */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Suas Especialidades</label>
+                    <div className="flex flex-wrap gap-2">
+                      {AVAILABLE_SKILLS.map((skill) => (
+                        <button
+                          key={skill}
+                          type="button"
+                          onClick={() => toggleSkill(skill)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                            selectedSkills.includes(skill)
+                              ? 'bg-blue-100 text-blue-700 border-blue-200'
+                              : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          {skill}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

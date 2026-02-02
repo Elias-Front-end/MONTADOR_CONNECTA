@@ -9,7 +9,8 @@ import {
   Menu, 
   X,
   User,
-  Users
+  Users,
+  Award
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -52,8 +53,8 @@ export default function DashboardLayout() {
   const partnerLinks = [
     { name: 'Visão Geral', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Meus Serviços', path: '/dashboard/services', icon: Briefcase },
-    { name: 'Meus Montadores', path: '/dashboard/montadores', icon: Users },
-    { name: 'Perfil', path: '/dashboard/profile', icon: Settings },
+    { name: 'Ranking Montadores', path: '/dashboard/ranking', icon: Award }, // Mudou de "Meus Montadores" para "Ranking"
+    { name: 'Perfil Corporativo', path: '/dashboard/profile', icon: Settings },
   ];
 
   const links = user.role === 'montador' ? montadorLinks : partnerLinks;
@@ -64,7 +65,11 @@ export default function DashboardLayout() {
       <aside className="hidden md:flex flex-col w-64 bg-slate-900 text-white min-h-screen fixed left-0 top-0 z-30 shadow-xl">
         <div className="p-6 flex items-center justify-center border-b border-slate-800">
           <h1 className="text-xl font-bold">
-            Montador<span className="text-blue-400">Conecta</span>
+            {user.role === 'montador' ? (
+               <span>Montador<span className="text-blue-400">Conecta</span></span>
+            ) : (
+               <span>Empresa<span className="text-yellow-400">Parceira</span></span>
+            )}
           </h1>
         </div>
 

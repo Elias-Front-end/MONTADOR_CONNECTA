@@ -9,6 +9,7 @@ import Profile from "@/pages/dashboard/Profile";
 import NewService from "@/pages/dashboard/services/NewService";
 import ServiceList from "@/pages/dashboard/services/ServiceList";
 import Opportunities from "@/pages/dashboard/Opportunities";
+import MontadoresRanking from "@/pages/dashboard/MontadoresRanking";
 
 // Placeholder Components for routes not yet implemented
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -38,7 +39,8 @@ export default function App() {
           {/* Partner Routes */}
           <Route path="services" element={<ServiceList />} />
           <Route path="services/new" element={<NewService />} />
-          <Route path="montadores" element={<PlaceholderPage title="Meus Montadores" />} />
+          <Route path="ranking" element={<MontadoresRanking />} />
+          <Route path="montadores" element={<PlaceholderPage title="Meus Montadores (Depreciado)" />} />
           
           {/* Shared Routes */}
           <Route path="profile" element={<Profile />} />
