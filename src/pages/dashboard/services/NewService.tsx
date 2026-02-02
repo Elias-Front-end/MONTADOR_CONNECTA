@@ -15,8 +15,8 @@ const serviceSchema = z.object({
   address_full: z.string().min(10, "Endereço completo é obrigatório"),
   scheduled_date: z.string().refine((val) => !isNaN(Date.parse(val)), "Data inválida"),
   scheduled_time: z.string().min(1, "Hora obrigatória"),
-  duration_hours: z.string().transform(Number).pipe(z.number().min(0.5, "Mínimo 30min")),
-  price: z.string().transform(Number).pipe(z.number().min(0, "Valor inválido")).optional(),
+  duration_hours: z.coerce.number().min(0.5, "Mínimo 30min"),
+  price: z.coerce.number().min(0, "Valor inválido").optional(),
   required_skills: z.array(z.string()).optional(),
 });
 
@@ -40,9 +40,10 @@ export default function NewService() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<ServiceForm>({
-    resolver: zodResolver(serviceSchema),
+    resolver: zodResolver(serviceSchema) as any, // Cast to any to avoid strict type mismatch with react-hook-form
     defaultValues: {
       duration_hours: 2,
+      required_skills: [],
     }
   });
 
