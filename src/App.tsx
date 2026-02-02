@@ -6,6 +6,8 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 import DashboardOverview from "@/pages/dashboard/Overview";
 import Schedule from "@/pages/dashboard/Schedule";
 import Profile from "@/pages/dashboard/Profile";
+import NewService from "@/pages/dashboard/services/NewService";
+import ServiceList from "@/pages/dashboard/services/ServiceList";
 
 // Placeholder Components for routes not yet implemented
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -33,8 +35,8 @@ export default function App() {
           <Route path="schedule" element={<Schedule />} />
           
           {/* Partner Routes */}
-          <Route path="services" element={<PlaceholderPage title="Gerenciar Serviços" />} />
-          <Route path="services/new" element={<PlaceholderPage title="Novo Serviço" />} />
+          <Route path="services" element={<ServiceList />} />
+          <Route path="services/new" element={<NewService />} />
           <Route path="montadores" element={<PlaceholderPage title="Meus Montadores" />} />
           
           {/* Shared Routes */}
