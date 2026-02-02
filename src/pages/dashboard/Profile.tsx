@@ -37,10 +37,11 @@ export default function Profile() {
   // Load Initial Data
   useEffect(() => {
     if (user) {
+      // Set basic fields immediately from store (fast)
       setValue('full_name', user.full_name || '');
       setValue('email', user.email || '');
       
-      // Load extended profile data
+      // Load extended profile data from DB (authoritative)
       loadExtendedProfile();
       loadPortfolio();
     }
@@ -48,16 +49,32 @@ export default function Profile() {
 
   const loadExtendedProfile = async () => {
     if (!user) return;
-    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    if (data) {
-      const fields: (keyof ProfileForm)[] = [
-        'video_presentation', 'facebook_url', 'youtube_url', 
-        'twitter_url', 'instagram_url', 'experience_years', 
-        'whatsapp', 'phone_secondary'
-      ];
-      fields.forEach(field => {
-        if (data[field]) setValue(field, data[field]);
-      });
+    try {
+      // Explicitly fetch latest data from DB, bypassing cache issues
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+
+      if (data) {
+        console.log("Loaded Profile Data:", data); // Debugging
+        
+        // Map fields explicitly, handling nulls
+        setValue('full_name', data.full_name || '');
+        setValue('video_presentation', data.video_presentation || '');
+        setValue('facebook_url', data.facebook_url || '');
+        setValue('youtube_url', data.youtube_url || '');
+        setValue('twitter_url', data.twitter_url || '');
+        setValue('instagram_url', data.instagram_url || '');
+        setValue('experience_years', data.experience_years || '');
+        setValue('whatsapp', data.whatsapp || '');
+        setValue('phone_secondary', data.phone_secondary || '');
+      }
+    } catch (err) {
+      console.error("Error loading profile:", err);
     }
   };
 
@@ -72,6 +89,8 @@ export default function Profile() {
     try {
       if (!user) return;
 
+      console.log("Saving Profile Data:", data); // Debugging
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -84,16 +103,20 @@ export default function Profile() {
           experience_years: data.experience_years,
           whatsapp: data.whatsapp,
           phone_secondary: data.phone_secondary,
+          updated_at: new Date().toISOString() // Force update timestamp
         })
         .eq('id', user.id);
 
       if (error) throw error;
       
-      await checkUser(); // Refresh store
+      // Reload data to ensure UI is in sync with DB
+      await loadExtendedProfile();
+      await checkUser(); // Refresh global store
+      
       alert('Dados atualizados com sucesso!');
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('Erro ao atualizar perfil.');
+      alert('Erro ao atualizar perfil. Verifique se você rodou o script SQL de atualização.');
     } finally {
       setIsLoading(false);
     }
