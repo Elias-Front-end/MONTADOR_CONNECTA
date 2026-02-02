@@ -5,6 +5,7 @@ import Register from "@/pages/Register";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import DashboardOverview from "@/pages/dashboard/Overview";
 import Schedule from "@/pages/dashboard/Schedule";
+import Profile from "@/pages/dashboard/Profile";
 
 // Placeholder Components for routes not yet implemented
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -37,7 +38,7 @@ export default function App() {
           <Route path="montadores" element={<PlaceholderPage title="Meus Montadores" />} />
           
           {/* Shared Routes */}
-          <Route path="profile" element={<PlaceholderPage title="Meu Perfil" />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
