@@ -93,7 +93,8 @@ export default function Profile() {
 
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id, // Obrigatório para upsert
           full_name: data.full_name,
           video_presentation: data.video_presentation,
           facebook_url: data.facebook_url,
@@ -103,9 +104,9 @@ export default function Profile() {
           experience_years: data.experience_years,
           whatsapp: data.whatsapp,
           phone_secondary: data.phone_secondary,
-          updated_at: new Date().toISOString() // Force update timestamp
+          updated_at: new Date().toISOString()
         })
-        .eq('id', user.id);
+        .select(); // Select garante que retorna o erro se falhar na política de INSERT
 
       if (error) throw error;
       
