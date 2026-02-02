@@ -48,9 +48,15 @@ if (internalSupabaseUrl) {
            // console.log(`Proxying ${req.method} request to: ${internalSupabaseUrl}${req.url}`);
         },
         error: (err, req, res) => {
-          console.error('Proxy Error:', err);
+          console.error('Proxy Error Details:', {
+            message: err.message,
+            code: (err as any).code,
+            address: (err as any).address,
+            port: (err as any).port,
+            target: internalSupabaseUrl
+          });
           if ((res as any).status) {
-            (res as any).status(500).json({ error: 'Proxy Error', details: err.message });
+            (res as any).status(500).json({ error: 'Proxy Error', details: err.message, code: (err as any).code });
           } else {
              res.end('Proxy Error');
           }
