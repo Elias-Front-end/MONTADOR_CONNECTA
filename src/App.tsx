@@ -2,13 +2,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import DashboardLayout from "@/layouts/DashboardLayout";
+import DashboardOverview from "@/pages/dashboard/Overview";
 
-const Dashboard = () => (
-  <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-    <div className="bg-white p-8 rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold text-blue-900 mb-4">Bem-vindo ao Dashboard!</h1>
-      <p className="text-gray-600">Seu login foi realizado com sucesso.</p>
-    </div>
+// Placeholder Components for routes not yet implemented
+const PlaceholderPage = ({ title }: { title: string }) => (
+  <div className="p-8 text-center">
+    <h2 className="text-2xl font-bold text-gray-300 mb-4">{title}</h2>
+    <p className="text-gray-500">Esta funcionalidade será implementada em breve.</p>
   </div>
 );
 
@@ -16,10 +17,28 @@ export default function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* Protected Dashboard Routes */}
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardOverview />} />
+          
+          {/* Montador Routes */}
+          <Route path="opportunities" element={<PlaceholderPage title="Oportunidades de Serviço" />} />
+          <Route path="schedule" element={<PlaceholderPage title="Minha Agenda" />} />
+          
+          {/* Partner Routes */}
+          <Route path="services" element={<PlaceholderPage title="Gerenciar Serviços" />} />
+          <Route path="services/new" element={<PlaceholderPage title="Novo Serviço" />} />
+          <Route path="montadores" element={<PlaceholderPage title="Meus Montadores" />} />
+          
+          {/* Shared Routes */}
+          <Route path="profile" element={<PlaceholderPage title="Meu Perfil" />} />
+        </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
