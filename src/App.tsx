@@ -4,6 +4,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import DashboardOverview from "@/pages/dashboard/Overview";
+import Schedule from "@/pages/dashboard/Schedule";
 
 // Placeholder Components for routes not yet implemented
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -28,7 +29,7 @@ export default function App() {
           
           {/* Montador Routes */}
           <Route path="opportunities" element={<PlaceholderPage title="Oportunidades de Serviço" />} />
-          <Route path="schedule" element={<PlaceholderPage title="Minha Agenda" />} />
+          <Route path="schedule" element={<Schedule />} />
           
           {/* Partner Routes */}
           <Route path="services" element={<PlaceholderPage title="Gerenciar Serviços" />} />
