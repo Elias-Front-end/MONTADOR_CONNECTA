@@ -8,6 +8,7 @@ import { Mail, Lock, Loader2, AlertCircle, User, Briefcase, Phone, MapPin } from
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Logo } from '@/components/Logo';
 
 // Schemas
 const baseSchema = {
@@ -98,7 +99,8 @@ export default function Register() {
           transition={{ duration: 0.5 }}
           className="max-w-xl w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100"
         >
-          <div>
+          <div className="flex flex-col items-center">
+            <Logo size="lg" className="mb-4" />
             <h2 className="mt-2 text-center text-3xl font-extrabold text-blue-900">
               Crie sua conta
             </h2>

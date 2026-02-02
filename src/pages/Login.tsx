@@ -8,6 +8,7 @@ import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Logo } from '@/components/Logo';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -56,8 +57,9 @@ export default function Login() {
           transition={{ duration: 0.5 }}
           className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100"
         >
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-blue-900">
+          <div className="flex flex-col items-center">
+            <Logo size="lg" className="mb-4" />
+            <h2 className="mt-2 text-center text-3xl font-extrabold text-blue-900">
               Acesse sua conta
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">

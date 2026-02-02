@@ -1,5 +1,6 @@
 import { Facebook, Instagram, Twitter, Mail, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Logo } from '@/components/Logo';
 
 export default function Footer() {
   return (
@@ -8,8 +9,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-1">
-            <Link to="/" className="text-2xl font-bold text-white mb-4 block">
-              Montador<span className="text-blue-500">Conecta</span>
+            <Link to="/" className="mb-4 block">
+              <Logo layout="horizontal" theme="light" size="sm" />
             </Link>
             <p className="text-sm text-gray-400 mb-6">
               A plataforma ideal para conectar clientes a montadores de móveis qualificados em todo o Brasil.

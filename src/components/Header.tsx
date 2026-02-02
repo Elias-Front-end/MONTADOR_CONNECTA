@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Menu, X, User, LogIn } from 'lucide-react';
 import { useState } from 'react';
+import { Logo } from '@/components/Logo';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,8 +12,8 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link to="/" className="text-2xl font-bold text-blue-900">
-              Montador<span className="text-blue-600">Conecta</span>
+            <Link to="/">
+              <Logo layout="horizontal" size="sm" />
             </Link>
           </div>
 

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SidebarLogo } from '@/components/Logo';
 
 export default function DashboardLayout() {
   const { user, signOut, checkUser, loading } = useAuthStore();
@@ -64,13 +65,7 @@ export default function DashboardLayout() {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-slate-900 text-white min-h-screen fixed left-0 top-0 z-30 shadow-xl">
         <div className="p-6 flex items-center justify-center border-b border-slate-800">
-          <h1 className="text-xl font-bold">
-            {user.role === 'montador' ? (
-               <span>Montador<span className="text-blue-400">Conecta</span></span>
-            ) : (
-               <span>Empresa<span className="text-yellow-400">Parceira</span></span>
-            )}
-          </h1>
+          <SidebarLogo />
         </div>
 
         <div className="flex-grow py-6 px-4 space-y-2">
@@ -121,7 +116,7 @@ export default function DashboardLayout() {
 
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 text-white z-40 flex items-center justify-between px-4 shadow-md">
-        <span className="font-bold text-lg">Montador<span className="text-blue-400">Conecta</span></span>
+        <SidebarLogo />
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
           {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
