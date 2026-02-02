@@ -132,11 +132,16 @@ export default function Profile() {
       const fileExt = file.name.split('.').pop();
       const filePath = `${user?.id}/avatar.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Supabase Storage Error:", uploadError);
+        throw uploadError;
+      }
+      
+      console.log("Upload success:", uploadData);
 
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
 
