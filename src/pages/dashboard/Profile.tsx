@@ -19,7 +19,19 @@ const profileSchema = z.object({
   experience_years: z.string().optional(),
   whatsapp: z.string().min(10, "WhatsApp inválido").optional().or(z.literal('')),
   phone_secondary: z.string().optional(),
+  skills: z.array(z.string()).optional(),
 });
+
+const AVAILABLE_SKILLS = [
+  "Móveis Planejados",
+  "Móveis de Escritório",
+  "Móveis de Cozinha",
+  "Guarda-Roupas",
+  "Sofás e Estofados",
+  "Instalação de TV/Suporte",
+  "Cortinas e Persianas",
+  "Pequenos Reparos Elétricos"
+];
 
 type ProfileForm = z.infer<typeof profileSchema>;
 
@@ -29,6 +41,7 @@ export default function Profile() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [portfolioItems, setPortfolioItems] = useState<any[]>([]);
   const [newVideoUrl, setNewVideoUrl] = useState('');
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -72,6 +85,11 @@ export default function Profile() {
         setValue('experience_years', data.experience_years || '');
         setValue('whatsapp', data.whatsapp || '');
         setValue('phone_secondary', data.phone_secondary || '');
+        
+        if (data.skills && Array.isArray(data.skills)) {
+          setSelectedSkills(data.skills);
+          setValue('skills', data.skills);
+        }
       }
     } catch (err) {
       console.error("Error loading profile:", err);
@@ -104,6 +122,7 @@ export default function Profile() {
           experience_years: data.experience_years,
           whatsapp: data.whatsapp,
           phone_secondary: data.phone_secondary,
+          skills: selectedSkills,
           updated_at: new Date().toISOString()
         })
         .select(); // Select garante que retorna o erro se falhar na política de INSERT
@@ -171,6 +190,15 @@ export default function Profile() {
     } catch (error) {
       console.error('Error adding video:', error);
     }
+  };
+
+  const toggleSkill = (skill: string) => {
+    const newSkills = selectedSkills.includes(skill)
+      ? selectedSkills.filter(s => s !== skill)
+      : [...selectedSkills, skill];
+    
+    setSelectedSkills(newSkills);
+    setValue('skills', newSkills);
   };
 
   return (
@@ -274,6 +302,29 @@ export default function Profile() {
                   placeholder="Ex: 5 anos"
                 />
               </div>
+
+              {/* Skills Section */}
+              {user?.role === 'montador' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Suas Especialidades</label>
+                  <div className="flex flex-wrap gap-2">
+                    {AVAILABLE_SKILLS.map((skill) => (
+                      <button
+                        key={skill}
+                        type="button"
+                        onClick={() => toggleSkill(skill)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                          selectedSkills.includes(skill)
+                            ? 'bg-blue-100 text-blue-700 border-blue-200'
+                            : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        {skill}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>

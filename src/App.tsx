@@ -8,6 +8,7 @@ import Schedule from "@/pages/dashboard/Schedule";
 import Profile from "@/pages/dashboard/Profile";
 import NewService from "@/pages/dashboard/services/NewService";
 import ServiceList from "@/pages/dashboard/services/ServiceList";
+import Opportunities from "@/pages/dashboard/Opportunities";
 
 // Placeholder Components for routes not yet implemented
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -31,7 +32,7 @@ export default function App() {
           <Route index element={<DashboardOverview />} />
           
           {/* Montador Routes */}
-          <Route path="opportunities" element={<PlaceholderPage title="Oportunidades de Serviço" />} />
+          <Route path="opportunities" element={<Opportunities />} />
           <Route path="schedule" element={<Schedule />} />
           
           {/* Partner Routes */}

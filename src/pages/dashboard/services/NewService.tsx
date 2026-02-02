@@ -17,7 +17,19 @@ const serviceSchema = z.object({
   scheduled_time: z.string().min(1, "Hora obrigatória"),
   duration_hours: z.string().transform(Number).pipe(z.number().min(0.5, "Mínimo 30min")),
   price: z.string().transform(Number).pipe(z.number().min(0, "Valor inválido")).optional(),
+  required_skills: z.array(z.string()).optional(),
 });
+
+const AVAILABLE_SKILLS = [
+  "Móveis Planejados",
+  "Móveis de Escritório",
+  "Móveis de Cozinha",
+  "Guarda-Roupas",
+  "Sofás e Estofados",
+  "Instalação de TV/Suporte",
+  "Cortinas e Persianas",
+  "Pequenos Reparos Elétricos"
+];
 
 type ServiceForm = z.infer<typeof serviceSchema>;
 
@@ -25,13 +37,23 @@ export default function NewService() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ServiceForm>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<ServiceForm>({
     resolver: zodResolver(serviceSchema),
     defaultValues: {
       duration_hours: 2,
     }
   });
+
+  const toggleSkill = (skill: string) => {
+    const newSkills = selectedSkills.includes(skill)
+      ? selectedSkills.filter(s => s !== skill)
+      : [...selectedSkills, skill];
+    
+    setSelectedSkills(newSkills);
+    setValue('required_skills', newSkills);
+  };
 
   const onSubmit = async (data: ServiceForm) => {
     setIsLoading(true);
@@ -51,6 +73,7 @@ export default function NewService() {
         scheduled_for: dateTime.toISOString(),
         duration_hours: data.duration_hours,
         price: data.price,
+        required_skills: selectedSkills,
         status: 'open'
       });
 
@@ -201,6 +224,32 @@ export default function NewService() {
                 className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-gray-800"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Skills Requirements */}
+        <div>
+          <h3 className="text-lg font-semibold text-slate-700 border-b pb-2 flex items-center mb-4">
+            <FileText className="w-5 h-5 mr-2 text-blue-600" />
+            Qualificações Necessárias
+          </h3>
+          <p className="text-sm text-gray-500 mb-3">Selecione quais habilidades o montador precisa ter para aceitar este serviço.</p>
+          
+          <div className="flex flex-wrap gap-2">
+            {AVAILABLE_SKILLS.map((skill) => (
+              <button
+                key={skill}
+                type="button"
+                onClick={() => toggleSkill(skill)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                  selectedSkills.includes(skill)
+                    ? 'bg-blue-100 text-blue-700 border-blue-200'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                {skill}
+              </button>
+            ))}
           </div>
         </div>
 
