@@ -117,9 +117,9 @@ export default function NewService() {
       alert('Serviço publicado com sucesso! Os montadores serão notificados.');
       navigate('/dashboard/services');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating service:', error);
-      alert('Erro ao criar serviço.');
+      alert(`Erro ao criar serviço: ${error.message || 'Erro desconhecido'}`);
     } finally {
       setIsLoading(false);
     }
