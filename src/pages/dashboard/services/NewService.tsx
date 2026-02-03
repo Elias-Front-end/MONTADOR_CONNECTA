@@ -93,6 +93,7 @@ export default function NewService() {
 
       const { error } = await supabase.from('services').insert({
         owner_id: user.id,
+        company_id: user.company_id || user.id, // Ensure company_id is sent
         title: data.title,
         description: data.description,
         category: data.category,

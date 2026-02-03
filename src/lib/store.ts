@@ -7,6 +7,7 @@ interface UserProfile {
   role: 'montador' | 'partner' | 'admin';
   full_name?: string;
   company_name?: string;
+  company_id?: string;
   avatar_url?: string;
 }
 
