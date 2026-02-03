@@ -44,8 +44,16 @@ if (internalSupabaseUrl) {
       },
       on: {
         proxyReq: (proxyReq, req, res) => {
-           // Optional: Log proxy requests for debugging
-           // console.log(`Proxying ${req.method} request to: ${internalSupabaseUrl}${req.url}`);
+           // Explicitly ensure apikey header is passed if present in original request
+           if (req.headers['apikey']) {
+             proxyReq.setHeader('apikey', req.headers['apikey']);
+           }
+           if (req.headers['authorization']) {
+             proxyReq.setHeader('Authorization', req.headers['authorization']);
+           }
+           
+           // Log for debugging
+           // console.log(`[Proxy] ${req.method} ${req.url} -> Header apikey: ${!!req.headers['apikey']}`);
         },
         error: (err, req, res) => {
           console.error('Proxy Error Details:', {

@@ -31,4 +31,10 @@ console.log('Supabase Config:', {
   source: typeof window !== 'undefined' && window.__ENV__?.VITE_SUPABASE_URL ? 'runtime' : 'build-time'
 });
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    headers: {
+      apikey: supabaseAnonKey,
+    },
+  },
+});
