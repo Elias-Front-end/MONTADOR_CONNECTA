@@ -92,8 +92,8 @@ export default function NewService() {
       const documentUrls: string[] = []; // Placeholder
 
       const { error } = await supabase.from('services').insert({
-        owner_id: user.id,
-        company_id: user.company_id || user.id, // Ensure company_id is sent
+        company_id: user.company_id || user.id, // Em caso de partner autônomo, o ID é o company_id
+        creator_id: user.id,
         title: data.title,
         description: data.description,
         category: data.category,
