@@ -45,7 +45,8 @@ export const useAuthStore = create<AuthState>((set) => ({
           user: { 
             id: session.user.id, 
             email: session.user.email!, 
-            role: session.user.user_metadata.role || 'montador' 
+            role: session.user.user_metadata.role || 'montador',
+            company_id: session.user.user_metadata.company_id || session.user.id
           }, 
           loading: false 
         });
