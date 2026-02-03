@@ -7,9 +7,14 @@ import {
   AlertCircle,
   Calendar as CalendarIcon,
   Plus,
-  Users
+  Users,
+  DollarSign,
+  TrendingUp,
+  Activity
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export default function DashboardOverview() {
   const { user } = useAuthStore();
@@ -21,7 +26,7 @@ export default function DashboardOverview() {
   return <PartnerOverview user={user} />;
 }
 
-function StatCard({ title, value, icon: Icon, color, link }: any) {
+function StatCard({ title, value, icon: Icon, color, link, subtext }: any) {
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
@@ -35,7 +40,10 @@ function StatCard({ title, value, icon: Icon, color, link }: any) {
         )}
       </div>
       <h3 className="text-gray-500 text-sm font-medium">{title}</h3>
-      <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
+      <div className="flex items-end gap-2">
+         <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
+         {subtext && <span className="text-xs text-gray-400 mb-1.5">{subtext}</span>}
+      </div>
     </div>
   );
 }
@@ -105,14 +113,72 @@ function MontadorOverview({ user }: any) {
 }
 
 function PartnerOverview({ user }: any) {
+  const [stats, setStats] = useState({
+    openServices: 0,
+    activeServices: 0,
+    completedMonth: 0,
+    totalSpent: 0,
+    activeMontadores: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      if (!user) return;
+      
+      try {
+        // Fetch Services Stats
+        const { data: services } = await supabase
+          .from('services')
+          .select('status, price, created_at')
+          .eq('owner_id', user.id);
+
+        if (services) {
+            const open = services.filter(s => s.status === 'open' || s.status === 'published').length;
+            const active = services.filter(s => s.status === 'accepted' || s.status === 'scheduled' || s.status === 'in_progress').length;
+            const completed = services.filter(s => s.status === 'completed').length; // Should filter by month in real app
+            const spent = services
+                .filter(s => s.status === 'completed')
+                .reduce((acc, curr) => acc + (curr.price || 0), 0);
+
+            setStats(prev => ({
+                ...prev,
+                openServices: open,
+                activeServices: active,
+                completedMonth: completed,
+                totalSpent: spent
+            }));
+        }
+
+        // Fetch Active Montadores (Partnerships)
+        const { count } = await supabase
+            .from('partnerships')
+            .select('*', { count: 'exact', head: true })
+            .eq('marcenaria_id', user.id)
+            .eq('status', 'active');
+        
+        setStats(prev => ({ ...prev, activeMontadores: count || 0 }));
+
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStats();
+  }, [user]);
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">
-            Painel da Empresa
+            Painel Corporativo
           </h1>
-          <p className="text-gray-600">Gerencie seus serviços e montadores parceiros.</p>
+          <p className="text-gray-600">
+            {user.company_name ? user.company_name : 'Minha Empresa'} • Visão Geral
+          </p>
         </div>
         <Link 
           to="/dashboard/services/new" 
@@ -123,47 +189,72 @@ function PartnerOverview({ user }: any) {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          title="Serviços Abertos" 
-          value="3" 
+          title="Em Aberto" 
+          value={loading ? '-' : stats.openServices} 
           icon={Briefcase} 
           color="blue" 
           link="/dashboard/services"
         />
         <StatCard 
           title="Em Andamento" 
-          value="1" 
-          icon={Clock} 
+          value={loading ? '-' : stats.activeServices} 
+          icon={Activity} 
           color="yellow" 
         />
         <StatCard 
-          title="Montadores Ativos" 
-          value="4" 
-          icon={Users} 
+          title="Gasto Total (Mês)" 
+          value={loading ? '-' : `R$ ${stats.totalSpent.toLocaleString('pt-BR')}`}
+          icon={DollarSign} 
           color="green" 
-          link="/dashboard/montadores"
+          subtext="Investido"
+        />
+        <StatCard 
+          title="Montadores Parceiros" 
+          value={loading ? '-' : stats.activeMontadores} 
+          icon={Users} 
+          color="purple" 
+          link="/dashboard/ranking"
         />
       </div>
 
-      {/* Recent Services List */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-          <h2 className="text-lg font-bold text-slate-800">Serviços Recentes</h2>
-          <Link to="/dashboard/services" className="text-sm text-blue-600 hover:underline">Ver todos</Link>
-        </div>
-        <div className="divide-y divide-gray-100">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between">
-              <div>
-                <h4 className="font-medium text-slate-900">Montagem Mesa de Escritório</h4>
-                <p className="text-sm text-gray-500">Criado em 01/02/2025 • Cliente: João Pedro</p>
-              </div>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                Aberto
-              </span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recent Activity / Services */}
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+            <h2 className="text-lg font-bold text-slate-800">Serviços Recentes</h2>
+            <Link to="/dashboard/services" className="text-sm text-blue-600 hover:underline">Ver todos</Link>
             </div>
-          ))}
+            {/* We would fetch real recent services here */}
+            <div className="divide-y divide-gray-100 p-8 text-center text-gray-500 text-sm">
+                Carregando atividades recentes...
+            </div>
+        </div>
+
+        {/* Quick Actions / Notifications */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-bold text-slate-800 mb-4">Ações Rápidas</h2>
+            <div className="space-y-3">
+                <Link to="/dashboard/services/new" className="block w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-gray-100 transition-colors">
+                    <div className="font-medium text-slate-700 flex items-center">
+                        <Plus className="w-4 h-4 mr-2 text-blue-600" /> Publicar Serviço
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1 pl-6">Crie uma nova ordem de serviço</p>
+                </Link>
+                <Link to="/dashboard/ranking" className="block w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-gray-100 transition-colors">
+                    <div className="font-medium text-slate-700 flex items-center">
+                        <Users className="w-4 h-4 mr-2 text-purple-600" /> Buscar Montadores
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1 pl-6">Encontre novos parceiros</p>
+                </Link>
+                 <Link to="/dashboard/profile" className="block w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-gray-100 transition-colors">
+                    <div className="font-medium text-slate-700 flex items-center">
+                        <TrendingUp className="w-4 h-4 mr-2 text-green-600" /> Relatórios
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1 pl-6">Ver desempenho detalhado</p>
+                </Link>
+            </div>
         </div>
       </div>
     </div>
