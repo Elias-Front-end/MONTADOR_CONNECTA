@@ -283,13 +283,13 @@ export default function Schedule() {
               >
                 <div className="flex justify-between items-start">
                   <span className={`
-                    text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full
-                    ${isTodayDate ? 'bg-blue-600 text-white' : ''}
+                    text-lg font-bold w-8 h-8 flex items-center justify-center rounded-full
+                    ${isTodayDate ? 'bg-blue-600 text-white' : 'text-gray-700'}
                   `}>
                     {format(day, 'd')}
                   </span>
                   {isCurrentMonth && (
-                    <div className={`w-2 h-2 rounded-full ${getIndicatorColor(day)}`}></div>
+                    <div className={`w-2.5 h-2.5 rounded-full ${getIndicatorColor(day)}`}></div>
                   )}
                 </div>
 
