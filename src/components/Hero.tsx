@@ -19,11 +19,9 @@ export default function Hero() {
           
           {/* Left Content (Text + Search) */}
           <div className="flex-1 text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-4 mb-6 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
-               {/* Logos de parceiros/confiança substituindo o texto */}
-               <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" className="h-6 w-auto" />
-               <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon" className="h-6 w-auto mt-1" />
-               <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg" alt="Samsung" className="h-8 w-auto" />
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-sm font-medium mb-6 border border-blue-100">
+              <Star className="w-4 h-4 mr-2 fill-current" />
+              #1 Plataforma de Montagem no Brasil
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-blue-950 tracking-tight mb-6 leading-tight">
