@@ -114,9 +114,13 @@ CREATE TABLE IF NOT EXISTS public.companies (
 );
 
 -- Adicionar FK de profiles -> companies agora que companies existe
-ALTER TABLE public.profiles 
-ADD CONSTRAINT fk_profiles_company 
-FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE SET NULL;
+DO $$ BEGIN
+    ALTER TABLE public.profiles 
+    ADD CONSTRAINT fk_profiles_company 
+    FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE SET NULL;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- ==========================================
 -- 4. TABELAS DE NEGÓCIO
@@ -224,7 +228,13 @@ CREATE TABLE IF NOT EXISTS public.availability_blocks (
 -- Estas views são essenciais para evitar "Infinite Recursion" em RLS
 -- Elas permitem consultar dados sensíveis (como company_id) sem disparar RLS recursivo
 
-CREATE OR REPLACE VIEW public.vw_profile_structure AS
+-- Importante: O owner desta view deve ser um superusuário ou role com bypass RLS
+-- No Supabase, geralmente é o 'postgres' ou 'service_role'.
+-- Como não podemos garantir o owner aqui, usamos GRANT explícito.
+
+CREATE OR REPLACE VIEW public.vw_profile_structure 
+WITH (security_invoker = false) -- Garante que roda com permissões do definidor (mas precisa ser criado por admin)
+AS
 SELECT 
     p.id, 
     p.role, 
@@ -232,6 +242,20 @@ SELECT
     c.owner_id as company_owner_id
 FROM public.profiles p
 LEFT JOIN public.companies c ON p.company_id = c.id;
+
+-- Dica: Para funcionar como Security Definer real em Views, o ideal é encapsular em uma função
+-- ou garantir que o usuário que roda o script tem permissão de ler tudo.
+-- Vamos criar uma função wrapper para garantir.
+
+CREATE OR REPLACE FUNCTION public.get_my_company_id()
+RETURNS UUID AS $$
+BEGIN
+    RETURN (SELECT company_id FROM public.profiles WHERE id = auth.uid());
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Ajustando Policies para usar a função segura em vez da View direta onde possível
+
 
 -- ==========================================
 -- 7. TRIGGERS E FUNÇÕES
@@ -268,8 +292,13 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_profiles_modtime ON public.profiles;
 CREATE TRIGGER update_profiles_modtime BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_companies_modtime ON public.companies;
 CREATE TRIGGER update_companies_modtime BEFORE UPDATE ON public.companies FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_services_modtime ON public.services;
 CREATE TRIGGER update_services_modtime BEFORE UPDATE ON public.services FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 -- ==========================================
@@ -288,19 +317,23 @@ ALTER TABLE public.availability_blocks ENABLE ROW LEVEL SECURITY;
 -- 8.1 PROFILES
 -- Ver: Todo mundo pode ver perfil básico (para listagens), mas idealmente restringir
 -- Aqui vamos permitir leitura pública autenticada para simplificar o discovery
+DROP POLICY IF EXISTS "Profiles are viewable by authenticated users" ON public.profiles;
 CREATE POLICY "Profiles are viewable by authenticated users" 
 ON public.profiles FOR SELECT TO authenticated USING (true);
 
 -- Editar: Apenas o dono
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" 
 ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
 -- 8.2 COMPANIES
 -- Ver: Público autenticado
+DROP POLICY IF EXISTS "Companies viewable by authenticated" ON public.companies;
 CREATE POLICY "Companies viewable by authenticated" 
 ON public.companies FOR SELECT TO authenticated USING (true);
 
 -- Criar: Qualquer parceiro sem empresa
+DROP POLICY IF EXISTS "Partners can create company" ON public.companies;
 CREATE POLICY "Partners can create company" 
 ON public.companies FOR INSERT 
 WITH CHECK (
@@ -311,29 +344,27 @@ WITH CHECK (
 );
 
 -- Editar: Apenas membros da empresa (simplificado para owner por enquanto)
+DROP POLICY IF EXISTS "Company owner can update" ON public.companies;
 CREATE POLICY "Company owner can update" 
 ON public.companies FOR UPDATE 
 USING (owner_id = auth.uid());
 
 -- 8.3 SERVICES (Coração do Sistema)
 -- INSERT: Apenas membros de empresa
+DROP POLICY IF EXISTS "Company members can create services" ON public.services;
 CREATE POLICY "Company members can create services" 
 ON public.services FOR INSERT 
 WITH CHECK (
-    company_id IN (
-        SELECT company_id FROM public.vw_profile_structure WHERE id = auth.uid()
-    )
+    company_id = public.get_my_company_id()
 );
 
 -- SELECT: 
--- 1. Membros da empresa dona
--- 2. Montador atribuído
--- 3. Montador parceiro (se status = published)
+DROP POLICY IF EXISTS "Service Visibility" ON public.services;
 CREATE POLICY "Service Visibility" 
 ON public.services FOR SELECT 
 USING (
     -- É da minha empresa?
-    company_id IN (SELECT company_id FROM public.vw_profile_structure WHERE id = auth.uid())
+    company_id = public.get_my_company_id()
     OR
     -- Sou o montador alocado?
     montador_id = auth.uid()
@@ -355,20 +386,17 @@ USING (
 );
 
 -- UPDATE:
--- 1. Empresa: Pode editar tudo
--- 2. Montador: Pode aceitar (update montador_id e status)
+DROP POLICY IF EXISTS "Service Update" ON public.services;
 CREATE POLICY "Service Update" 
 ON public.services FOR UPDATE 
 USING (
     -- Empresa
-    company_id IN (SELECT company_id FROM public.vw_profile_structure WHERE id = auth.uid())
+    company_id = public.get_my_company_id()
     OR
     -- Montador aceitando
     (
         status = 'published' 
         AND montador_id IS NULL 
-        -- E precisa ser parceiro? Se sim, descomentar:
-        -- AND EXISTS (SELECT 1 FROM public.partnerships WHERE montador_id = auth.uid() AND company_id = services.company_id)
     )
     OR
     -- Montador atualizando status (ex: in_progress -> completed)
@@ -377,6 +405,7 @@ USING (
 
 -- 8.4 PARTNERSHIPS
 -- Ver: Membros do vínculo
+DROP POLICY IF EXISTS "Partnership Visibility" ON public.partnerships;
 CREATE POLICY "Partnership Visibility" 
 ON public.partnerships FOR SELECT 
 USING (
@@ -386,6 +415,7 @@ USING (
 );
 
 -- Criar: Empresa convida
+DROP POLICY IF EXISTS "Company creates partnership" ON public.partnerships;
 CREATE POLICY "Company creates partnership" 
 ON public.partnerships FOR INSERT 
 WITH CHECK (
@@ -393,12 +423,15 @@ WITH CHECK (
 );
 
 -- Atualizar: Montador aceita/rejeita
+DROP POLICY IF EXISTS "Montador updates partnership" ON public.partnerships;
 CREATE POLICY "Montador updates partnership" 
 ON public.partnerships FOR UPDATE 
 USING (montador_id = auth.uid());
 
 -- 8.5 REVIEWS
+DROP POLICY IF EXISTS "Reviews visibility" ON public.reviews;
 CREATE POLICY "Reviews visibility" ON public.reviews FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Create reviews" ON public.reviews;
 CREATE POLICY "Create reviews" ON public.reviews FOR INSERT WITH CHECK (auth.uid() = reviewer_id);
 
 -- ==========================================
